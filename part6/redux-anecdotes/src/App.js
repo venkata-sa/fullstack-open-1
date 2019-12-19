@@ -5,20 +5,16 @@ import AnecdoteList from './components/AnecdoteList'
 import Notification from './components/Notification'
 import Filter from './components/Filter'
 
-const App = (props) => {
-	const store = props.store
+const App = () => {
 
 	return (
 		<div>
-			{ store.getState().notification === null 
-				? null 
-				: <Notification store = { store } /> 
-			}
-			<Filter store = { store } />
+			<Notification />
+			<Filter />
 			<hr />
-			<AnecdoteList store = { store } />
+			<AnecdoteList />
 			<hr />
-			<AnecdoteForm store = { store } />
+			<AnecdoteForm />
 		</div>
 	)
 }

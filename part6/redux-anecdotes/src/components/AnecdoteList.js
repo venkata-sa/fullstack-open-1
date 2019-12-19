@@ -1,4 +1,5 @@
 import React from 'react'
+import { connect } from 'react-redux'
 
 import { incrementVotes } from '../reducers/anecdoteReducer'
 import { setNotification, clearNotification } from '../reducers/notificationReducer'
@@ -18,33 +19,52 @@ const List = ({anecdote, handleClick}) => {
 	)
 }
 
-const clickHandler = ( store, anecdote ) => {
-		store.dispatch( setNotification( `You voted for '${anecdote.content}'` ) )
-		store.dispatch( incrementVotes( anecdote.id ) )
+const clickHandler = ( props, anecdote ) => {
+		props.setNotification( `You voted for '${anecdote.content}'` )
+		props.incrementVotes( anecdote.id )
 		setTimeout( () => {
-			store.dispatch( clearNotification() )
+			props.clearNotification()
 		}, 4000 )
 }
 
-const Listing = ( props ) => {
-	const store = props.store
-	const { anecdotes, notification, filter } = store.getState()
-	const anecdoteList = anecdotes.filter( anecdote => anecdote.content.includes( filter ) )
-
+const Listing = (props) => {
 	return (
 		<>
 			<h2>Anecdotes</h2>
-			{anecdoteList
+			{props.anecdotesLeft
 				.sort( ( a, b ) => b.votes - a.votes )
 				.map(anecdote =>
 				<List 
 					anecdote = { anecdote }
 					key = { anecdote.id }
-					handleClick = { () => clickHandler( store, anecdote ) }
+					handleClick = { () => clickHandler( props, anecdote ) }
 				/>
 			)}
 		</>
 	)
 }
 
-export default Listing
+const anecdotesToShow = (anecdotes, filter) => {
+	return anecdotes.filter(
+		anecdote => anecdote.content.includes(filter)
+	)
+}
+
+const mapStateToProps = ( state ) => {
+	return {
+		anecdotesLeft: anecdotesToShow(state.anecdotes, state.filter),
+		filter: state.filter,
+		notification: state.notification
+	}
+}
+
+const mapDispatchToProps = {
+	incrementVotes,
+	setNotification,
+	clearNotification
+}
+
+export default connect(
+	mapStateToProps,
+	mapDispatchToProps
+)(Listing)
