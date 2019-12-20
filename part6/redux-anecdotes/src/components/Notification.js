@@ -9,7 +9,7 @@ const Notification = (props) => {
 	}
 	if ( props.notification ) {
 		return (
-			<div style={style} >
+			<div style = { style } >
 				{ props.notification }
 			</div>
 		)

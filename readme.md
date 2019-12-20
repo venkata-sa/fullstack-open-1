@@ -11,6 +11,7 @@
 * Part 3
 * Part 4
 * Part 5
+* Part 6
 
 - [@course-link](https://fullstackopen.com/en/)
 - [@course-submission](https://studies.cs.helsinki.fi/fullstackopen2019/#/)

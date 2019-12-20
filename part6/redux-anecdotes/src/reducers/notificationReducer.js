@@ -9,14 +9,19 @@ const reducer = ( state = null, action ) => {
     }
 }
 
-export const setNotification = (message) => {
-    return {
-        type: 'ALERT',
-        data: message
-    }
+export const setNotification = ( message, time ) => {
+	return dispatch => {
+		dispatch({
+			type: 'ALERT',
+			data: message
+		})
+		setTimeout( () => {
+			dispatch(clearNotification())
+		}, time * 1000 )
+	}
 }
 
-export const clearNotification = () => {
+const clearNotification = () => {
     return {
         type: 'CLEAR'
     }
