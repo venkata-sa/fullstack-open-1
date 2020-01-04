@@ -8,7 +8,8 @@ import {
 import blogService from './services/blogs'
 
 import { getCurrentUser, logout, loginUser } from './reducers/userReducer'
-import { initializeBlogs } from './reducers/blogReducer'
+import { initializeBlogs, updateBlog } from './reducers/blogReducer'
+import { setNotification } from './reducers/notificationReducer'
 
 import NewBlog from './components/NewBlog'
 import Notification from './components/Notification'
@@ -16,7 +17,6 @@ import Togglable from './components/Togglable'
 import Login from './components/Login'
 import Blogs from './components/Blogs'
 import Users from './components/Users'
-// import User from './components/User'
 
 const App = ( props ) => {
 
@@ -36,22 +36,20 @@ const App = ( props ) => {
 		props.logout()
 		blogService.destroyToken()
 		window.localStorage.removeItem('loggedBlogAppUser')
+		
+		return (
+			<Redirect to = '/' />
+		)
 	}
 
 	const loggedUserView = () => (
 		<div>
-			<p>{props.user.name} logged in</p>
-			<button onClick={ () => handleLogout(props) }>logout</button>
-
 			<Users />
 		</div>
 	)
 
 	const loggedBlogView = () => (
 		<div>
-			<p>{props.user.name} logged in</p>
-			<button onClick={ () => handleLogout(props) }>logout</button>
-			
 			<Togglable buttonLabel='create new' ref={newBlogRef}>
 				<NewBlog />
 			</Togglable>
@@ -70,7 +68,6 @@ const App = ( props ) => {
 
 		return (
 			<div>
-				<p> {props.user.name} logged in </p>
 				<h2> { u.user.name } </h2>
 				<h3> added blogs </h3>
 				<ul>
@@ -84,16 +81,51 @@ const App = ( props ) => {
 		)
 	}
 
+	const likeBlog = async (blog) => {
+		const likedBlog = { ...blog, likes: blog.likes + 1}
+		console.log(likedBlog)
+		await props.updateBlog( likedBlog )
+		props.setNotification(`blog ${likedBlog.title} by ${likedBlog.author} liked!`, 'green', 3)
+	}
+
+	const showSingleBlog = ( id ) => {
+		if( props.user === null ) return null
+		const blog = props.blogs.find( b => b.id === id )
+
+		if( blog === undefined ) return null
+
+		return (
+			<div>
+				<h2> { blog.title } { blog.author } </h2>
+				<a href = { blog.url } > { blog.url } </a>
+				<div>
+					{ blog.likes } likes
+					<button onClick = { () => likeBlog(blog) } > like </button>
+				</div>
+				<div> added by { blog.user.name } </div>
+			</div>
+		)
+	}
+
+	const showOptions = () => {
+		return (
+			<>
+				{ props.user.name } logged in
+				<button onClick={ () => handleLogout(props) }>logout</button>
+			</>
+		)
+	}
+
 	const newBlogRef = React.createRef()
 
 	return (
 		<div>
 			<Router>
 				<div>
-					<div>
-						<Link style = { paddingStyle } to = '/'> login </Link>
+					<div style = { { backgroundColor: '#e6e6e6' } } >
 						<Link style = { paddingStyle } to = '/users'> users </Link>
 						<Link style = { paddingStyle } to = '/blogs'> blogs </Link>
+						{ props.user === null ? null : showOptions() } 
 					</div>
 					<div>
 						<h2>blogs</h2>
@@ -110,7 +142,9 @@ const App = ( props ) => {
 						<Route path = '/users/:id' render =
 							{ ({match}) => showUser(match.params.id) }
 						/>
-						{/* { props.user === null ? <Login /> : loggedUserView() } */}
+						<Route path = '/blogs/:id' render =
+							{ ({match}) => showSingleBlog( match.params.id ) }
+						/>
 					</div>
 				</div>
 			</Router>
@@ -130,7 +164,9 @@ const mapDispatchToProps = {
 	getCurrentUser,
 	logout,
 	loginUser,
-	initializeBlogs
+	initializeBlogs,
+	updateBlog,
+	setNotification
 }
 
 export default connect(

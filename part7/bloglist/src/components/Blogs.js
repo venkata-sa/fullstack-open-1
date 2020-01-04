@@ -34,10 +34,7 @@ const Blogs = (props) => {
 				<Blog
 					key={blog.id}
 					blog={blog}
-					like={likeBlog}
-					remove={removeBlog}
-					user={props.user}
-					creator={blog.user.username === props.user.username ? true : false}
+					// creator={blog.user.username === props.user.username ? true : false}
 				/>
 			)}
 		</div>
