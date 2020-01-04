@@ -31,17 +31,20 @@ const Login = (props) => {
 	}
 
 	return (
-		<form onSubmit={handleLogin}>
-			<div>
-				username
-				<input {...username}/>
-			</div>
-			<div>
-				password
-				<input {...password} />
-			</div>
-			<button type="submit"> login </button>
-		</form>
+		<div>
+			<h2> Log in for application </h2>
+			<form onSubmit={handleLogin}>
+				<div>
+					username
+					<input {...username}/>
+				</div>
+				<div>
+					password
+					<input {...password} />
+				</div>
+				<button type="submit"> login </button>
+			</form>
+		</div>
 	)
 }
 

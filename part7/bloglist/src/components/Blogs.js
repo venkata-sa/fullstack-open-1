@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import { initializeBlogs, updateBlog, deleteBlog } from '../reducers/blogReducer'
 import { setNotification } from '../reducers/notificationReducer'
 
-import Blog from './Blog'
+import Blog from './Blog/Blog'
 
 const Blogs = (props) => {
 	useEffect( () => {
