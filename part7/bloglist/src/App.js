@@ -17,6 +17,7 @@ import Togglable from './components/Togglable'
 import Login from './components/Login'
 import Blogs from './components/Blogs'
 import Users from './components/Users'
+import Blog from './components/Blog'
 
 const App = ( props ) => {
 
@@ -41,12 +42,6 @@ const App = ( props ) => {
 			<Redirect to = '/' />
 		)
 	}
-
-	const loggedUserView = () => (
-		<div>
-			<Users />
-		</div>
-	)
 
 	const loggedBlogView = () => (
 		<div>
@@ -91,19 +86,10 @@ const App = ( props ) => {
 	const showSingleBlog = ( id ) => {
 		if( props.user === null ) return null
 		const blog = props.blogs.find( b => b.id === id )
-
 		if( blog === undefined ) return null
 
 		return (
-			<div>
-				<h2> { blog.title } { blog.author } </h2>
-				<a href = { blog.url } > { blog.url } </a>
-				<div>
-					{ blog.likes } likes
-					<button onClick = { () => likeBlog(blog) } > like </button>
-				</div>
-				<div> added by { blog.user.name } </div>
-			</div>
+			<Blog blog = { blog } likeBlog = { likeBlog } />
 		)
 	}
 
@@ -134,7 +120,7 @@ const App = ( props ) => {
 							{ () => props.user === null ? <Login /> : <Redirect to = '/blogs' /> }
 						/>
 						<Route exact path = '/users' render = 
-							{ () => props.user === null ? <Redirect to = '/' /> : loggedUserView() } 
+							{ () => props.user === null ? <Redirect to = '/' /> : <Users /> } 
 						/>
 						<Route exact path = '/blogs' render = 
 							{ () => props.user === null ? <Redirect to = '/' /> : loggedBlogView() }

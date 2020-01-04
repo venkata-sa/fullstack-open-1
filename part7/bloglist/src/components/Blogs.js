@@ -4,8 +4,6 @@ import { connect } from 'react-redux'
 import { initializeBlogs, updateBlog, deleteBlog } from '../reducers/blogReducer'
 import { setNotification } from '../reducers/notificationReducer'
 
-import Blog from './Blog/Blog'
-
 const Blogs = (props) => {
 	useEffect( () => {
 		props.initializeBlogs()
@@ -13,29 +11,31 @@ const Blogs = (props) => {
 
 	const blogsToShow = () => props.blogs.sort( (a,b) => b.likes - a.likes )
 
-	const likeBlog = async (blog) => {
-		const likedBlog = { ...blog, likes: blog.likes + 1}
-		console.log(likedBlog)
-		await props.updateBlog( likedBlog )
-		props.setNotification(`blog ${likedBlog.title} by ${likedBlog.author} liked!`, 'green', 3)
+	const blogStyle = {
+		paddingTop: 10,
+		paddingLeft: 2,
+		border: 'solid',
+		borderWidth: 1,
+		marginBottom: 5
 	}
 
-	const removeBlog = async (blog) => {
-		const ok = window.confirm(`remove blog ${blog.title} by ${blog.author}`)
-		if (ok) {
-			await props.deleteBlog(blog)
-			props.setNotification(`blog ${blog.title} by ${blog.author} removed!`, 'error', 3)
-		}
-	}
+	// const removeBlog = async (blog) => {
+	// 	const ok = window.confirm(`remove blog ${blog.title} by ${blog.author}`)
+	// 	if (ok) {
+	// 		await props.deleteBlog(blog)
+	// 		props.setNotification(`blog ${blog.title} by ${blog.author} removed!`, 'error', 3)
+	// 	}
+	// }
 
 	return (
 		<div>
 			{blogsToShow().map( blog => 
-				<Blog
-					key={blog.id}
-					blog={blog}
-					// creator={blog.user.username === props.user.username ? true : false}
-				/>
+				<div style = { blogStyle } key = { blog.id }  >
+					<a href = { `/blogs/${blog.id}` } >
+						{ blog.title } { blog.author }
+					</a>
+					{/* creator={blog.user.username === props.user.username ? true : false} */}
+				</div>
 			)}
 		</div>
 	)
