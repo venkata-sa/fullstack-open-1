@@ -98,11 +98,11 @@ blogsRouter.put('/:id', async (request, response, next) => {
 
 blogsRouter.post('/:id/comments', async (request, response, next) => {
 	try {
-		const body = request.body.text
+		const body = request.body
 		const id = request.params.id
-		
+
 		const blog = await Blog.findById(id)
-		blog.comments = blog.comments.concat(body)
+		blog.comments = blog.comments.concat(body.value)
 		await Blog.findByIdAndUpdate( id, blog )
 		response.sendStatus(201).json(blog)
 	}
