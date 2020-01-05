@@ -1,6 +1,7 @@
 import React from 'react'
 import { useField } from '../hooks'
 import { connect } from 'react-redux'
+import { Form, Button, Header, Divider } from 'semantic-ui-react'
 
 import { loginUser } from '../reducers/userReducer'
 import { setNotification } from '../reducers/notificationReducer'
@@ -11,7 +12,7 @@ import blogService from '../services/blogs'
 const Login = (props) => {
 	const [username] = useField('text')
 	const [password] = useField('password')
-	
+
 	const handleLogin = async (event) => {
 		event.preventDefault()
 		try {
@@ -23,27 +24,28 @@ const Login = (props) => {
 			window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
 			blogService.setToken(user.token)
 			props.loginUser(user)
-			// props.setNotification(`${user.name} logged in`, 3)
 		} catch (exception) {
-			// notify('wrong username of password', 'error')
 			props.setNotification('wrong username or password', 'error', 3)
 		}
 	}
 
 	return (
 		<div>
-			<h2> Log in for application </h2>
-			<form onSubmit={handleLogin}>
-				<div>
-					username
-					<input {...username}/>
-				</div>
-				<div>
-					password
-					<input {...password} />
-				</div>
-				<button type="submit"> login </button>
-			</form>
+			<Header size = "medium" > Log in for application </Header>
+			<Divider />
+			<div style = { { paddingLeft: 14 } } >
+				<Form onSubmit={handleLogin}>
+					<Form.Field>
+						<label> Username </label>
+						<input {...username} placeholder = 'Username' id = 'username' />
+					</Form.Field>
+					<Form.Field>
+						<label> Password </label>
+						<input {...password} placeholder = 'Password' id = 'password' />
+					</Form.Field>
+					<Button type="submit" primary > Login </Button>
+				</Form>
+			</div>
 		</div>
 	)
 }

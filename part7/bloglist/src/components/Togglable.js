@@ -1,5 +1,7 @@
 import React, { useState, useImperativeHandle } from 'react'
+import { Button } from 'semantic-ui-react'
 
+/* eslint-disable */
 const Togglable = React.forwardRef((props, ref) => {
 	const [visible, setVisible] = useState(false)
 
@@ -12,21 +14,21 @@ const Togglable = React.forwardRef((props, ref) => {
 
 	useImperativeHandle(ref, () => {
 		return {
-		toggleVisibility
+			toggleVisibility
 		}
 	})
 
 	return (
 		<div>
-		<div style={hideWhenVisible}>
-			<button onClick={toggleVisibility}>
-			{props.buttonLabel}
-			</button>
-		</div>
-		<div style={showWhenVisible}>
-			{props.children}
-			<button onClick={toggleVisibility}>cancel</button>
-		</div>
+			<div style={hideWhenVisible}>
+				<Button onClick={toggleVisibility}>
+					{props.buttonLabel}
+				</Button>
+			</div>
+			<div style={showWhenVisible}>
+				{props.children}
+				<Button onClick={toggleVisibility}>cancel</Button>
+			</div>
 		</div>
 	)
 })

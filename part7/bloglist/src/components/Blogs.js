@@ -7,7 +7,7 @@ import { setNotification } from '../reducers/notificationReducer'
 const Blogs = (props) => {
 	useEffect( () => {
 		props.initializeBlogs()
-	},[] )
+	},[props] )
 
 	const blogsToShow = () => props.blogs.sort( (a,b) => b.likes - a.likes )
 
@@ -28,8 +28,8 @@ const Blogs = (props) => {
 	// }
 
 	return (
-		<div>
-			{blogsToShow().map( blog => 
+		<div style = { { padding: 14 } } >
+			{blogsToShow().map( blog =>
 				<div style = { blogStyle } key = { blog.id }  >
 					<a href = { `/blogs/${blog.id}` } >
 						{ blog.title } { blog.author }

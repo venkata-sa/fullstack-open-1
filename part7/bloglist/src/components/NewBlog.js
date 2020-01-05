@@ -1,6 +1,7 @@
 import React from 'react'
 import { useField } from '../hooks'
 import { connect } from 'react-redux'
+import { Form, Button, Divider, Header, Container } from 'semantic-ui-react'
 
 import { createBlog } from '../reducers/blogReducer'
 
@@ -24,23 +25,27 @@ const NewBlog = (props) => {
 
 	return (
 		<div>
-			<h2>create new</h2>
+			<Header size = "medium" >create new</Header>
 
-			<form onSubmit={handleSubmit}>
-				<div>
-					title:
-					<input {...title} />
-				</div>
-				<div>
-					author:
-					<input {...author} />
-				</div>
-				<div>
-					url:
-					<input {...url} />
-				</div>
-				<button type='submit'>create</button>
-			</form>
+			<Container>
+				<Form onSubmit={handleSubmit}>
+					<Form.Field>
+						<label> Title: </label>
+						<input {...title} placeholder = 'Title' data-cy="title" />
+					</Form.Field>
+					<Form.Field>
+						<label> Author: </label>
+						<input {...author} placeholder = 'Author' id = 'author' />
+					</Form.Field>
+					<Form.Field>
+						<label> URL: </label>
+						<input {...url} placeholder = 'URL' id = 'url' />
+					</Form.Field>
+					<Button primary type='submit'>create</Button>
+				</Form>
+
+				<Divider />
+			</Container>
 		</div>
 	)
 }

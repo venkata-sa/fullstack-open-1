@@ -36,11 +36,11 @@ const blogs = [
 		id: '5c486ebcdb26d0e3c34a7ef8'
 	}
 ]
-  
+
 const getAll = () => {
 	return Promise.resolve(blogs)
 }
-  
+
 const setToken = () => {}
 
 export default { getAll, setToken }

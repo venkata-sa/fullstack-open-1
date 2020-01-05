@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Header, Container } from 'semantic-ui-react'
 
 import userService from '../services/users'
 
@@ -12,25 +13,27 @@ const Users = () => {
 
 	return (
 		<div>
-			<h2> Users </h2>
-			<table>
-				<thead>
-					<tr>
-						<th> </th>
-						<th> blogs created </th>
-					</tr>
-				</thead>
-				<tbody>
-					{ users.map( user =>
-						<tr key = { user.id } >
-							<td>
-								<a href = { `/users/${user.id}` } > { user.name } </a>
-							</td>
-							<td> { user.blogs.length } </td>
+			<Container>
+				<Header size = 'medium' > Users </Header>
+				<table>
+					<thead>
+						<tr>
+							<th> </th>
+							<th> blogs created </th>
 						</tr>
-					) }
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{ users.map( user =>
+							<tr key = { user.id } >
+								<td>
+									<a href = { `/users/${user.id}` } > { user.name } </a>
+								</td>
+								<td> { user.blogs.length } </td>
+							</tr>
+						) }
+					</tbody>
+				</table>
+			</Container>
 		</div>
 	)
 }
