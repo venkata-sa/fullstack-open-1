@@ -4,38 +4,35 @@ const uuid = require('uuid/v1')
 let books = require('./books')
 
 const typeDefs = gql`
-	type Author {
-		author: String!
-		bookCount: Int!
-		born: Int
-	}
-
 	type Book {
-		id: ID!
 		title: String!
+		published: Int!
 		author: Author!
-		published: Int
-		genre: [String!]!
+		genres: [String!]!
+		id: ID!
 	}
-
+	type Author {
+		name: String!
+		born: Int
+		id: ID!
+		bookCount: Int
+	}
 	type Query {
 		bookCount: Int!
 		authorCount: Int!
 		allBooks(author: String, genre: [String]): [Book!]
 		allAuthors: [Author!]!
 	}
-
 	type Mutation {
-		addBook (
-			title: String!
-			author: String!
-			published: Int
-			genre: [String!]!
-		): Book,
-		editAuthor (
-			name: String!
-			setBornTo: Int!
-		): Author
+		addBook(
+		title: String!
+		published: Int!
+		author: String!
+		genres: [String]
+		bookCount: Int
+		born: Int
+		): Book
+		editAuthor(name: String!, setBornTo: Int!): Author
 	}
 `
 
@@ -50,51 +47,64 @@ const resolvers = {
 			return count.length
 		},
 		allBooks: (root, args) => {
-			let toReturn = books
+			let toReturn = []
+				for( let x of books ) {
+					let ele = {...x}
+					ele.name = ele.author
+					toReturn.push(ele)
+				}
 
-			if( !args.author && !args.genre ) return toReturn
+			if( !args.author && !args.genres ) return toReturn
 			if( args.hasOwnProperty( 'author' ) ) toReturn = toReturn.filter( b => b.author === args.author )
-			if( args.hasOwnProperty( 'genre' ) ) {
-				for( let x of args.genre ) toReturn = toReturn.filter( b => b.genre.includes(x) )
+			if( args.hasOwnProperty( 'genres' ) ) {
+				for( let x of args.genres ) toReturn = toReturn.filter( b => b.genres.includes(x) )
 			}
 			
 			return toReturn
 		},
 		allAuthors: () => {
-			const map = new Map()
+			const bCount = new Map()
+			const bornMap = new Map()
 			books.forEach( b => {
-				if (!map.get( b.author )) map.set(b.author,1)
-				else map.set( b.author, map.get( b.author ) + 1 )
+				if( !bCount.get( b.author ) ) {
+					bCount.set(b.author, 1)
+					bornMap.set( b.author, b.born !== undefined ? b.born : null )
+				}
+				else bCount.set( b.author, bCount.get( b.author ) + 1 )
 			})
 			const arr = []
-			for( let [key, value] of map.entries() ){
-				arr.push({ author: key, bookCount: value })
-			}
+			for( let [key, value] of bCount.entries() ) {
+				let x = bornMap.get( key )
+				console.log(x)
+				arr.push({ name: key, bookCount: value, born: x })
+			}	
+			console.log( arr )		
 			return arr
 		}
 	},
 	Book: {
 		author: (root) => {
+			const mBorn = root.born === undefined ? null : root.born
+			
 			return {
-				author: root.author,
+				name: root.name,
 				bookCount: root.bookCount,
-				born: root.born
+				born: mBorn
 			}
 		}
 	},
 	Mutation: {
-		addBook: ( root,args ) => {
-			const book = { ...args, id: uuid() }
+		addBook: (root, args) => {
+			const book = { ...args, id: uuid(), name: args.author }
 			books = books.concat(book)
 			return book
-		}
-	},
-	Mutation: {
+		},
 		editAuthor: (root, args) => {
 			const author = books.find( b => b.author === args.name )
 			if( !author ) return null
 
 			author.born = args.setBornTo
+			author.name = author.author
 			books = books.map( b => b.author === args.name ? author : b )
 			return author
 		}
