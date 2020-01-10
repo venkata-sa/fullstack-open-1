@@ -1,6 +1,20 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 const Books = ({ show, result }) => {
+	const [genres, setGenres] = useState([])
+	const [ filter, setFilter ] = useState('')
+	const books = result.data.allBooks
+
+	useEffect( () => {
+		if( books ) {
+			books.forEach( book => {
+				book.genres.forEach( genre => {
+					if( !genres.includes( genre ) ) setGenres(genres.concat(genre))
+				})
+			})
+		}
+	}, [books, genres])
+
 	if (!show) {
 		return null
 	}
@@ -12,7 +26,11 @@ const Books = ({ show, result }) => {
 		)
 	}
 
-	const books = result.data.allBooks
+	let booksToShow = books
+	if( filter !== '' ) {
+		booksToShow = booksToShow.filter( b => b.genres.includes(filter) )
+	}
+	if( filter === '' ) booksToShow = books
 
 	return (
 		<div>
@@ -29,7 +47,7 @@ const Books = ({ show, result }) => {
 							published
 						</th>
 					</tr>
-					{books.map(a =>
+					{booksToShow.map(a =>
 						<tr key={a.title}>
 							<td>{a.title}</td>
 							<td>{a.author.name}</td>
@@ -38,6 +56,12 @@ const Books = ({ show, result }) => {
 					)}
 				</tbody>
 			</table>
+
+			{genres.map( genre => 
+				<button onClick = { () => setFilter( genre ) } > { genre } </button>
+			)}
+			<button onClick = { () => setFilter('') } > all genres </button>
+
 		</div>
 	)
 }
