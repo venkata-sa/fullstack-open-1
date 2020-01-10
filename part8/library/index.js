@@ -1,9 +1,32 @@
-const { ApolloServer, gql } = require('apollo-server')
+require('dotenv').config()
+const { ApolloServer, UserInputError, gql } = require('apollo-server')
+const mongoose = require('mongoose')
 const uuid = require('uuid/v1')
+const jwt = require('jsonwebtoken')
 
-let books = require('./books')
+const Book = require('./models/book')
+const Author = require('./models/author')
+const User = require('./models/user')
+
+console.log('connecting to ',process.env.MONGODB_URI)
+mongoose.set( 'useFindAndModify', false )
+mongoose.connect( process.env.MONGODB_URI, { useNewUrlParser: true } )
+	.then( () => {
+		console.log('connected to MONGODB')
+	})
+	.catch( error => {
+		console.log('error in connecting to DB:', error.message)
+	})
 
 const typeDefs = gql`
+	type User {
+		username: String!
+		favoriteGenre: String!
+		id: ID!
+	}
+	type Token {
+		value: String!
+	}
 	type Book {
 		title: String!
 		published: Int!
@@ -14,14 +37,15 @@ const typeDefs = gql`
 	type Author {
 		name: String!
 		born: Int
-		id: ID!
 		bookCount: Int
+		id: ID!
 	}
 	type Query {
 		bookCount: Int!
 		authorCount: Int!
 		allBooks(author: String, genre: [String]): [Book!]
 		allAuthors: [Author!]!
+		me: User
 	}
 	type Mutation {
 		addBook(
@@ -29,57 +53,61 @@ const typeDefs = gql`
 		published: Int!
 		author: String!
 		genres: [String]
-		bookCount: Int
 		born: Int
 		): Book
+
 		editAuthor(name: String!, setBornTo: Int!): Author
+
+		createUser(
+			username: String!
+			favoriteGenre: String!
+		): User
+
+		login(
+			username: String!
+			password: String!
+		): Token
 	}
 `
 
 const resolvers = {
 	Query: {
-		bookCount: () => books.length,
-		authorCount: () => {
-			const count = []
-			books.forEach( b => {
-				if (!count.includes( b.author )) count.push(b.author)
-			})
-			return count.length
-		},
-		allBooks: (root, args) => {
-			let toReturn = []
-				for( let x of books ) {
-					let ele = {...x}
-					ele.name = ele.author
-					toReturn.push(ele)
-				}
+		bookCount: () => Book.collection.countDocuments(),
+		authorCount: () => Author.collection.countDocuments(),
+		allBooks: async (root, args) => {
+			let books = await Book.find({})
 
-			if( !args.author && !args.genres ) return toReturn
-			if( args.hasOwnProperty( 'author' ) ) toReturn = toReturn.filter( b => b.author === args.author )
-			if( args.hasOwnProperty( 'genres' ) ) {
-				for( let x of args.genres ) toReturn = toReturn.filter( b => b.genres.includes(x) )
+			if( args.genre ) books = books.filter( b => b.genres.includes(args.genre) )
+			if( args.author ) {
+				const author = await Author.findOne({ name: args.author })
+				books = books.filter( b => b.author.equals(author._id) )
 			}
-			
-			return toReturn
-		},
-		allAuthors: () => {
-			const bCount = new Map()
-			const bornMap = new Map()
-			books.forEach( b => {
-				if( !bCount.get( b.author ) ) {
-					bCount.set(b.author, 1)
-					bornMap.set( b.author, b.born !== undefined ? b.born : null )
+
+			return books.map( async book => {
+				const author = await Author.findById( book.author )
+
+				return {
+					title: book.title,
+					genres: book.genres,
+					published: book.published,
+					name: author.name,
+					born: author.born
 				}
-				else bCount.set( b.author, bCount.get( b.author ) + 1 )
 			})
-			const arr = []
-			for( let [key, value] of bCount.entries() ) {
-				let x = bornMap.get( key )
-				console.log(x)
-				arr.push({ name: key, bookCount: value, born: x })
-			}	
-			console.log( arr )		
-			return arr
+		},
+		allAuthors: async () => {
+			const authors = await Author.find({})
+			return authors.map( async author => {
+				return {
+					name: author.name,
+					born: author.born,
+					id: author._id,
+					bookCount: await Book.find({ author: author._id }).countDocuments()
+				}
+			})
+		},
+		me: ( root, args, context ) => {
+			return context.currentUser
 		}
 	},
 	Book: {
@@ -88,32 +116,97 @@ const resolvers = {
 			
 			return {
 				name: root.name,
-				bookCount: root.bookCount,
 				born: mBorn
 			}
 		}
 	},
 	Mutation: {
-		addBook: (root, args) => {
-			const book = { ...args, id: uuid(), name: args.author }
-			books = books.concat(book)
-			return book
-		},
-		editAuthor: (root, args) => {
-			const author = books.find( b => b.author === args.name )
-			if( !author ) return null
+		addBook: async (root, args, { currentUser }) => {
+			if( !currentUser ) {
+				throw new AuthenticationError('not authorized')
+			}
 
+			let author = await Author.findOne({ name: args.author })
+			if( !author ) {
+				author = await new Author({ name: args.author })
+				await author.save()
+			}
+
+			const book = new Book({ ...args, author })
+			try {
+				await book.save()
+			}
+			catch ( error ) {
+				throw new UserInputError( error.message, {
+					invalidArgs: args
+				})
+			}
+			return {
+				title: book.title,
+				published: book.published,
+				genres: book.genres,
+				name: author.name,
+				born: author.born
+			}
+		},
+		editAuthor: async (root, args, { currentUser }) => {
+			if( !currentUser ) throw new AuthenticationError('not authorized')
+			
+			const author = await Author.findOne({ name: args.name })
+			if( !author ) return null
 			author.born = args.setBornTo
-			author.name = author.author
-			books = books.map( b => b.author === args.name ? author : b )
+			try {
+				await author.save()
+			}
+			catch( error ) {
+				throw new UserInputError( error.message, {
+					invalidArgs: args
+				})
+			}
 			return author
+		},
+		login: async (root, args) => {
+			const user = await User.findOne({ username: args.username })
+
+			if( !user || args.password !== 'secret' ) {
+				throw new UserInputError( 'wrong credentials' )
+			}
+
+			const userForToken = {
+				username: args.username,
+				id: user._id
+			}
+
+			return { value: jwt.sign( userForToken, process.env.JWT_SECRET ) }
+		},
+		createUser: async ( root, async ) => {
+			const user = new User({ username: args.username })
+
+			try {
+				await user.save()
+			}
+			catch( error ) {
+				throw new UserInputError( error.message, {
+					invalidArgs: args
+				})
+			}
 		}
 	}
 }
 
 const server = new ApolloServer({
 	typeDefs,
-	resolvers
+	resolvers,
+	context: async ({ req }) => {
+		const auth = req ? req.headers.authorization : null
+		if( auth && auth.toLowerCase().startsWith('bearer ') ) {
+			const decodedToken = jwt.verify(
+				auth.substring(7), process.env.JWT_SECRET
+			)
+			const currentUser = await User.findById( decodedToken.id )
+			return { currentUser }
+		}
+	}
 })
 
 server.listen().then(({ url }) => {
